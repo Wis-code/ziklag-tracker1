@@ -1,7 +1,6 @@
 const { google } = require('googleapis');
 
 exports.handler = async (event, context) => {
-  // Handle cross-origin preflight requests safely (CORS)
   if (event.httpMethod === 'OPTIONS') {
     return {
       statusCode: 200,
@@ -19,30 +18,26 @@ exports.handler = async (event, context) => {
   }
 
   try {
-    // 1. Parse the incoming form submission payload from the frontend
     const { clientName, track, stepTitle, notes, fileUrl } = JSON.parse(event.body);
     
-    // 2. Core Server Credentials
-    const apiKey = 'AIzaSyB43DJcnasDHI42ShePQDRx_r6Sp_xN1kM'; 
-    const spreadsheetId = '1rRJ4jfzLMSI2NPGt-3fO_zHOA2VWqw2cRKHhzruwJj8'; 
+    // Clean & Secure: Pulling values dynamically from the Netlify dashboard settings
+    const apiKey = process.env.GOOGLE_API_KEY; 
+    const spreadsheetId = process.env.SPREADSHEET_ID; 
 
     const sheets = google.sheets({ version: 'v4', auth: apiKey });
 
-    // 3. Map the fields precisely to match your clean camelCase Sheet headings 
-    // This perfectly matches columns A through G in your live layout
     const values = [
       [
-        new Date().toISOString(),            // Column A: timestamp
-        clientName || 'Unnamed Client Instance', // Column B: clientIdentifier
-        track ? track.toUpperCase() : 'N/A',   // Column C: tracking
-        stepTitle || 'No Title Set',          // Column D: milestoneTitle
-        notes || '',                          // Column E: notesIdeas
-        fileUrl || 'No Attachments Saved',    // Column F: assetLink
-        'COMPLETED'                           // Column G: status
+        new Date().toISOString(), 
+        clientName || 'Unnamed Client', 
+        track ? track.toUpperCase() : 'LOGO', 
+        stepTitle, 
+        notes || '', 
+        fileUrl || 'No Attachments',
+        'COMPLETED'
       ]
     ];
 
-    // 4. Append payload row down to the Google Sheet database
     await sheets.spreadsheets.values.append({
       spreadsheetId,
       range: 'Sheet1!A:G',
