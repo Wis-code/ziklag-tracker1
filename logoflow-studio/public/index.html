@@ -22,37 +22,30 @@
   body { background: var(--bg); color: var(--text); font-family: 'DM Sans', sans-serif; min-height: 100vh; padding: 24px; }
   .container { max-width: 820px; margin: 0 auto; }
   
-  /* Header Nav */
   header { display: flex; justify-content: space-between; align-items: center; padding-bottom: 24px; border-bottom: 1px solid var(--border); margin-bottom: 32px; }
   h1 { font-family: 'Cormorant Garamond', serif; font-size: 28px; letter-spacing: 2px; cursor: pointer; }
   
-  /* Interactive Buttons */
   .btn { background: var(--teal); color: var(--bg); border: none; padding: 10px 20px; border-radius: 6px; font-weight: bold; cursor: pointer; transition: opacity 0.2s; }
   .btn:hover { opacity: 0.9; }
   .btn-secondary { background: transparent; color: var(--text-muted); border: 1px solid var(--border); margin-right: 8px; }
   .btn:disabled { opacity: 0.4; cursor: not-allowed; }
 
-  /* Views Management */
   .view-panel { display: none; }
   .view-panel.active { display: block; }
   
-  /* Dashboard Grid Cards */
   .project-grid { display: grid; grid-template-columns: 1fr; gap: 16px; margin-top: 20px; }
   .project-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 24px; cursor: pointer; transition: transform 0.2s, border-color 0.2s; position: relative; }
   .project-card:hover { transform: translateY(-2px); border-color: var(--teal); }
   .project-meta { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
   
-  /* Progress Trackers */
   .progress-bar-bg { width: 100%; height: 6px; background: var(--surface2); border-radius: 4px; overflow: hidden; margin-top: 8px; }
   .progress-bar-fill { height: 100%; background: var(--teal); width: 0%; transition: width 0.4s ease; }
 
-  /* Pipeline Checksheet Elements */
   .card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 20px; margin-bottom: 12px; }
   .step-header { display: flex; align-items: center; justify-content: space-between; cursor: pointer; padding: 4px 0; }
   .step-body { padding-top: 16px; display: none; }
   .step-body.open { display: block; }
   
-  /* Workspace Stylings */
   .tip-box { background: var(--gold-bg); border: 1px solid rgba(255,210,80,0.2); border-radius: 8px; color: var(--gold); font-size: 13px; margin: 12px 0; padding: 12px; line-height: 1.5; }
   textarea { width: 100%; background: var(--surface2); border: 1px solid var(--border); border-radius: 6px; padding: 12px; color: white; resize: vertical; margin-bottom: 12px; font-family: inherit; outline: none; }
   textarea:focus { border-color: var(--teal); }
@@ -62,6 +55,12 @@
   
   .back-link { color: var(--teal); font-size: 14px; cursor: pointer; display: inline-flex; align-items: center; margin-bottom: 20px; font-weight: bold; }
   .empty-state { text-align: center; padding: 40px; color: var(--text-muted); }
+
+  /* Loading spinner */
+  .loading-state { text-align: center; padding: 40px; color: var(--text-muted); }
+  .spinner { display: inline-block; width: 28px; height: 28px; border: 3px solid var(--border); border-top-color: var(--teal); border-radius: 50%; animation: spin 0.8s linear infinite; margin-bottom: 12px; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .sync-badge { font-size: 11px; color: var(--teal); opacity: 0.7; margin-left: 8px; }
 </style>
 </head>
 <body>
@@ -72,7 +71,10 @@
   </header>
 
   <div id="view-home" class="view-panel active">
-    <h2 style="font-family: 'Cormorant Garamond', serif; font-size: 24px;">Active Brand Pipelines</h2>
+    <h2 style="font-family: 'Cormorant Garamond', serif; font-size: 24px;">
+      Active Brand Pipelines
+      <span id="sync-status" class="sync-badge"></span>
+    </h2>
     <div id="project-list-container" class="project-grid"></div>
   </div>
 
@@ -100,13 +102,11 @@
       <h2 id="active-project-title" style="font-family: 'Cormorant Garamond', serif; font-size: 28px; color: var(--text);"></h2>
       <span id="active-project-track" class="track-badge"></span>
     </div>
-    
     <div id="steps-timeline-container"></div>
   </div>
 </div>
 
 <script>
-// Framework Steps Setup Data
 const LOGO_STEPS = [
   { id: 1, icon: '📋', title: 'Client Intake & Brief', desc: 'Collect all client info: business name, industry, target market, competitors, style preferences, deliverables needed, timeline, and budget.', tip: 'The more detail you get here, the less back-and-forth later. Use an open discovery call to catch unique properties.' },
   { id: 2, icon: '🔍', title: 'Competitor Research', desc: 'Study 3–5 direct competitors. Note their logo styles, corporate color tracks, typography layouts, and overall identity positioning.', tip: 'Identify operational gaps and distinct creative vectors so the new brand can stand completely apart.' },
@@ -117,7 +117,7 @@ const LOGO_STEPS = [
   { id: 7, icon: '🧠', title: 'Word Mapping & Brainstorm', desc: 'Write down key words associated with the brand bubbles. Free branch out from each text block to uncover secondary concepts, shapes, and symbols.', tip: 'Unexpected connections between abstract words often mutate into your most successful design marks.' },
   { id: 8, icon: '✏️', title: 'Thumbnail Sketching', desc: 'Rough sketch concepts by hand or via mobile tools. Explore distinct category layouts: Monogram, Abstract, Wordmark, Combination, Mascot, Emblem.', tip: 'It does NOT have to be pretty. Sketch in separate quick bursts and look for beautiful structural accidents.' },
   { id: 9, icon: '💻', title: 'Vectorize Concepts', desc: 'Bring your strongest napkin sketches into vector software. Trace your draft concepts into clean, mathematically precise geometric layers.', tip: 'Test your vector mark at tiny mobile resolutions (100x100 pixels) early. If it loses visual clarity, simplify immediately.' },
-  { id: 10, icon: '🔤', title: 'Typography Pairings Study', desc: 'Select font pairings that reinforce the brand temperament. Establish explicit system rules: Headline size, leading, tracking spaces, and casing limits.', tip: 'All caps = strong & stable. Lowercase = approachably soft. Wide letter tracking tracking = luxury.' },
+  { id: 10, icon: '🔤', title: 'Typography Pairings Study', desc: 'Select font pairings that reinforce the brand temperament. Establish explicit system rules: Headline size, leading, tracking spaces, and casing limits.', tip: 'All caps = strong & stable. Lowercase = approachably soft. Wide letter tracking = luxury.' },
   { id: 11, icon: '🎨', title: 'Color Palette System', desc: 'Develop the versatile color palette. Define absolute coordinate numbers for each tone: HEX codes, RGB web metrics, and CMYK print ink formulas.', tip: 'Test all color definitions together in context on real mockups — never look at swatches in total isolation.' },
   { id: 12, icon: '📐', title: 'Logo Matrix Variations', desc: 'Build required functional variations: standard horizontal lockup, vertical stack, icon-only mark, and responsive mobile header layouts.', tip: 'Test every layout matrix on both pure light and deep dark background contrasts to ensure flexible visibility.' },
   { id: 13, icon: '📏', title: 'Clear Space Spacing Rules', desc: 'Define border margins around the logo boundaries using an invisible 1x unit-based structural system.', tip: 'Avoid setting pixel-specific spacing measurements — they fail to translate cleanly between print and digital mediums.' },
@@ -135,18 +135,80 @@ const BRANDING_EXTRA = [
   { id: 22, icon: '🚀', title: 'Final System Delivery', desc: 'Package and ship the complete asset inventory library: logo vectors, standards guide PDF, color palettes, and template layout links.', tip: 'Conduct a final walk-through call to explain usage rules. Offer a brand management retainer support package as an upsell.' }
 ];
 
-// App State Management Architecture
-let projects = JSON.parse(localStorage.getItem('logoflow_projects')) || [];
+// ─── State ────────────────────────────────────────────────
+let projects = [];
 let currentProjectId = null;
+const FUNCTION_URL = 'https://script.google.com/macros/s/AKfycbxXMXphQtjqtE-ovtXbqOsSl8Uqtz2e0JxHPlKX080Jl3wcLYlH8UX3CAaRmkeSZB4A/exec';
 
+// ─── Sheet Sync ───────────────────────────────────────────
+async function loadProjectsFromSheet() {
+  const container = document.getElementById('project-list-container');
+  const syncStatus = document.getElementById('sync-status');
+
+  // Show spinner while loading
+  container.innerHTML = `
+    <div class="loading-state">
+      <div class="spinner"></div>
+      <p>Syncing pipelines from cloud...</p>
+    </div>`;
+  syncStatus.textContent = '↻ syncing...';
+
+  try {
+    const res = await fetch(FUNCTION_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'loadProjects' }),
+      redirect: 'follow'
+    });
+    const data = await res.json();
+
+    if (data.projects && Array.isArray(data.projects)) {
+      projects = data.projects;
+      // Merge with any local-only projects (created while offline)
+      const localProjects = JSON.parse(localStorage.getItem('logoflow_projects') || '[]');
+      localProjects.forEach(lp => {
+        if (!projects.find(p => p.id === lp.id)) {
+          projects.unshift(lp);
+        }
+      });
+      localStorage.setItem('logoflow_projects', JSON.stringify(projects));
+      syncStatus.textContent = '✓ synced';
+    } else {
+      throw new Error('Bad response');
+    }
+  } catch (err) {
+    // Fall back to localStorage if network fails
+    projects = JSON.parse(localStorage.getItem('logoflow_projects') || '[]');
+    syncStatus.textContent = '⚠ offline cache';
+  }
+
+  renderDashboardList();
+}
+
+async function saveProjectToSheet(project) {
+  try {
+    await fetch(FUNCTION_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'saveProject', project }),
+      redirect: 'follow'
+    });
+  } catch (err) {
+    console.warn('Sheet save failed, stored locally only:', err);
+  }
+  // Always keep localStorage in sync as backup
+  localStorage.setItem('logoflow_projects', JSON.stringify(projects));
+}
+
+// ─── Views ────────────────────────────────────────────────
 function showView(viewName) {
   document.querySelectorAll('.view-panel').forEach(v => v.classList.remove('active'));
   document.getElementById(`view-${viewName}`).classList.add('active');
-  
+
   const navBtn = document.getElementById('nav-action-btn');
   if (viewName === 'home') {
     navBtn.style.display = 'block';
-    renderDashboardList();
+    loadProjectsFromSheet(); // Always re-sync when returning home
   } else {
     navBtn.style.display = 'none';
   }
@@ -184,7 +246,7 @@ function renderDashboardList() {
   container.innerHTML = html;
 }
 
-function createNewProjectInstance() {
+async function createNewProjectInstance() {
   const nameInput = document.getElementById('client-name-input');
   const name = nameInput.value.trim();
   const track = document.getElementById('track-select').value;
@@ -202,14 +264,17 @@ function createNewProjectInstance() {
   projects.unshift(newProject);
   localStorage.setItem('logoflow_projects', JSON.stringify(projects));
   nameInput.value = '';
-  
+
+  // Save to sheet in background
+  saveProjectToSheet(newProject);
+
   openProjectWorkspace(newProject.id);
 }
 
 function openProjectWorkspace(id) {
   currentProjectId = id;
   const project = projects.find(p => p.id === id);
-  
+
   document.getElementById('active-project-title').innerText = `◈ Workspace: ${project.name}`;
   document.getElementById('active-project-track').innerText = `${project.track.toUpperCase()} PROCESS ENGINE`;
 
@@ -231,12 +296,9 @@ function openProjectWorkspace(id) {
         <div class="step-body ${step.id === 1 && !isDone ? 'open' : ''}" id="body-${step.id}">
           <p style="color:var(--text-muted); font-size:14px; line-height:1.6;">${step.desc}</p>
           <div class="tip-box">${step.tip}</div>
-          
           <textarea id="note-${step.id}" rows="3" placeholder="Scribble notes, research pointers, or creative rules..." oninput="saveNotesLocally(${step.id})">${savedNote}</textarea>
-          
           <label style="display:block; font-size:11px; margin-bottom:6px; color:var(--teal); font-weight:bold;">ATTACH LAYOUT SCREENSHOT LINK</label>
           <input type="file" id="file-${step.id}" accept="image/*">
-          
           <button class="btn" id="btn-sync-${step.id}" style="width:100%; padding:12px;" onclick="pushMilestoneToCloud(${step.id})">
             ${isDone ? '✓ Update Tracking Rows & Sync' : '✓ Mark Complete & Push Downstream'}
           </button>
@@ -254,6 +316,9 @@ function saveNotesLocally(stepId) {
   const textVal = document.getElementById(`note-${stepId}`).value;
   project.notesCache[stepId] = textVal;
   localStorage.setItem('logoflow_projects', JSON.stringify(projects));
+  // Debounced sheet save
+  clearTimeout(window._notesSaveTimer);
+  window._notesSaveTimer = setTimeout(() => saveProjectToSheet(project), 2000);
 }
 
 async function pushMilestoneToCloud(stepId) {
@@ -261,7 +326,7 @@ async function pushMilestoneToCloud(stepId) {
   const syncBtn = document.getElementById(`btn-sync-${stepId}`);
   const notes = document.getElementById(`note-${stepId}`).value;
   const fileInput = document.getElementById(`file-${stepId}`);
-  
+
   let assetUrl = "No Attachments Saved";
   if (fileInput.files.length > 0) {
     assetUrl = `https://logoflow.studio/vault/assets/${fileInput.files[0].name}`;
@@ -271,13 +336,15 @@ async function pushMilestoneToCloud(stepId) {
   syncBtn.innerText = "Syncing with Google Sheets...";
 
   try {
-    const response = await fetch('/.netlify/functions/save-milestone', {
+    const response = await fetch(FUNCTION_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
+      redirect: 'follow',
       body: JSON.stringify({
+        action: 'saveMilestone',
         clientName: project.name,
         track: project.track,
-        stepTitle: `Step ${stepId} - ${LOGO_STEPS.find(s => s.id === stepId)?.title || BRANDING_EXTRA.find(s => s.id === stepId)?.title}`,
+        stepTitle: `Step ${stepId} - ${[...LOGO_STEPS, ...BRANDING_EXTRA].find(s => s.id === stepId)?.title}`,
         notes: notes,
         fileUrl: assetUrl
       })
@@ -286,11 +353,13 @@ async function pushMilestoneToCloud(stepId) {
     if (response.ok) {
       alert(`🎉 Database Updated! Milestone synchronized cleanly.`);
       project.completedSteps[stepId] = true;
-      localStorage.setItem('logoflow_projects', JSON.stringify(projects));
-      
+
+      // Save updated project state to sheet + localStorage
+      await saveProjectToSheet(project);
+
       document.getElementById(`card-${stepId}`).style.borderLeft = "4px solid var(--teal)";
       document.getElementById(`body-${stepId}`).classList.remove('open');
-      
+
       const nextBlock = document.getElementById(`body-${stepId + 1}`);
       if (nextBlock) nextBlock.classList.add('open');
     } else {
@@ -305,8 +374,8 @@ async function pushMilestoneToCloud(stepId) {
   }
 }
 
-// Initial Run View Call
-showView('home');
+// Initial load — pull from sheet
+loadProjectsFromSheet();
 </script>
 </body>
 </html>
