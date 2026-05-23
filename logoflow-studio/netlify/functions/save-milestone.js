@@ -16,7 +16,7 @@ exports.handler = async (event, context) => {
   try {
     const payload = JSON.parse(event.body);
 
-    const scriptUrl = 'https://script.google.com/macros/s/AKfycbwOoTwoCDNbNditQjYUbXXvcny-35QOPp5Bxo1xT76LDFOTz5DMYWllIw6aQ3cUaoWt/exec';
+    const scriptUrl = 'https://script.google.com/macros/s/AKfycbyqmP5hW4hCbfWxGgiHW4fFK6rYBD_fCIo6fUO6R2hRVTedn2as4H6yjY2LFNanNKl2/exec';
 
     const response = await fetch(scriptUrl, {
       method: 'POST',
