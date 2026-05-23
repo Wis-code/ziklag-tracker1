@@ -138,7 +138,7 @@ const BRANDING_EXTRA = [
 // ─── State ────────────────────────────────────────────────
 let projects = [];
 let currentProjectId = null;
-const FUNCTION_URL = 'https://script.google.com/macros/s/AKfycbxXMXphQtjqtE-ovtXbqOsSl8Uqtz2e0JxHPlKX080Jl3wcLYlH8UX3CAaRmkeSZB4A/exec';
+const FUNCTION_URL = 'https://script.google.com/macros/s/AKfycbwK6tTyK0Sb527vSI3biFbltth6RZDPMaHDvxK6jDimXIkBpfb4rbyaEEWkZ74VnW7J/exec';
 
 // ─── Sheet Sync ───────────────────────────────────────────
 async function loadProjectsFromSheet() {
@@ -154,12 +154,8 @@ async function loadProjectsFromSheet() {
   syncStatus.textContent = '↻ syncing...';
 
   try {
-    const res = await fetch(FUNCTION_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ action: 'loadProjects' }),
-      redirect: 'follow'
-    });
+    const url = FUNCTION_URL + '?action=loadProjects';
+    const res = await fetch(url, { redirect: 'follow' });
     const data = await res.json();
 
     if (data.projects && Array.isArray(data.projects)) {
@@ -187,12 +183,8 @@ async function loadProjectsFromSheet() {
 
 async function saveProjectToSheet(project) {
   try {
-    await fetch(FUNCTION_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ action: 'saveProject', project }),
-      redirect: 'follow'
-    });
+    const sp = new URLSearchParams({ action: 'saveProject', project: JSON.stringify(project) });
+    await fetch(FUNCTION_URL + '?' + sp.toString(), { redirect: 'follow' });
   } catch (err) {
     console.warn('Sheet save failed, stored locally only:', err);
   }
@@ -336,19 +328,15 @@ async function pushMilestoneToCloud(stepId) {
   syncBtn.innerText = "Syncing with Google Sheets...";
 
   try {
-    const response = await fetch(FUNCTION_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      redirect: 'follow',
-      body: JSON.stringify({
-        action: 'saveMilestone',
-        clientName: project.name,
-        track: project.track,
-        stepTitle: `Step ${stepId} - ${[...LOGO_STEPS, ...BRANDING_EXTRA].find(s => s.id === stepId)?.title}`,
-        notes: notes,
-        fileUrl: assetUrl
-      })
+    const milestoneParams = new URLSearchParams({
+      action: 'saveMilestone',
+      clientName: project.name,
+      track: project.track,
+      stepTitle: `Step ${stepId} - ${[...LOGO_STEPS, ...BRANDING_EXTRA].find(s => s.id === stepId)?.title}`,
+      notes: notes,
+      fileUrl: assetUrl
     });
+    const response = await fetch(FUNCTION_URL + '?' + milestoneParams.toString(), { redirect: 'follow' });
 
     if (response.ok) {
       alert(`🎉 Database Updated! Milestone synchronized cleanly.`);
