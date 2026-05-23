@@ -16,14 +16,14 @@ exports.handler = async (event, context) => {
   try {
     const payload = JSON.parse(event.body);
 
-    // This grabs the URL we just saved in your Netlify settings
-    const scriptUrl = process.env.APPS_SCRIPT_URL;
+    // ✅ Hardcoded directly — no env variable needed
+    const scriptUrl = 'https://script.google.com/macros/s/AKfycbxd52SpeYosWYwz311NdMqoH9fyTIjjMz0QGN_8F1kLZbe0v9pnu-EgEtxNpwcF6eqr/exec';
 
     const response = await fetch(scriptUrl, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload),
-      redirect: 'follow' // Important — Apps Script redirects requests
+      redirect: 'follow'
     });
 
     const result = await response.json();
@@ -35,9 +35,6 @@ exports.handler = async (event, context) => {
     };
 
   } catch (error) {
-    // 💡 This line will force the exact error to show up in your Netlify logs
-    console.error("NETLIFY_FUNCTION_ERROR:", error.message);
-
     return {
       statusCode: 500,
       headers: { 'Content-Type': 'application/json', ...corsHeaders },
@@ -45,4 +42,3 @@ exports.handler = async (event, context) => {
     };
   }
 };
-
