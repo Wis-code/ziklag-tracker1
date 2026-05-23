@@ -20,7 +20,7 @@ exports.handler = async (event, context) => {
   try {
     const { clientName, track, stepTitle, notes, fileUrl } = JSON.parse(event.body);
     
-    // Clean & Secure: Pulling values dynamically from the Netlify dashboard settings
+    // Secure: Reads directly from the Netlify Environment Variables screen!
     const apiKey = process.env.GOOGLE_API_KEY; 
     const spreadsheetId = process.env.SPREADSHEET_ID; 
 
