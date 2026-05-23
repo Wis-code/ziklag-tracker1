@@ -16,8 +16,7 @@ exports.handler = async (event, context) => {
   try {
     const payload = JSON.parse(event.body);
 
-    // ✅ Hardcoded directly — no env variable needed
-    const scriptUrl = 'https://script.google.com/macros/s/AKfycbxd52SpeYosWYwz311NdMqoH9fyTIjjMz0QGN_8F1kLZbe0v9pnu-EgEtxNpwcF6eqr/exec';
+    const scriptUrl = 'https://script.google.com/macros/s/AKfycbwOoTwoCDNbNditQjYUbXXvcny-35QOPp5Bxo1xT76LDFOTz5DMYWllIw6aQ3cUaoWt/exec';
 
     const response = await fetch(scriptUrl, {
       method: 'POST',
