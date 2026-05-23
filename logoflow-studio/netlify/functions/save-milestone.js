@@ -35,6 +35,9 @@ exports.handler = async (event, context) => {
     };
 
   } catch (error) {
+    // 💡 This line will force the exact error to show up in your Netlify logs
+    console.error("NETLIFY_FUNCTION_ERROR:", error.message);
+
     return {
       statusCode: 500,
       headers: { 'Content-Type': 'application/json', ...corsHeaders },
@@ -42,3 +45,4 @@ exports.handler = async (event, context) => {
     };
   }
 };
+
